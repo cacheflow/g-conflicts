@@ -1,19 +1,34 @@
 const {spawn} = require('child_process')
+const {render} = require('prettyjson')
+const path = require('path')
 
 let findConflicts = spawn('grep', ["-l", "-r", "<<<", '.'])
 let CONFLICTED_FILE_MESSAGE = "You have conflicts in"
+let currentFileNamePath = __filename
+let nodeMods = "node_modules"
 
 findConflicts.stdout.on('data', ((data) => {
-	let conflictedFiles = data.toString('utf8')
-	getFilesWithConflicts(conflictedFiles)
+	let res = data.toString('utf8')
+	let stdOutAsArr = res.split('\n')
+	if(removeExtraneousData(stdOutAsArr).length) {
+		getFilesWithConflicts(stdOutAsArr)
+	}
+	else {
+		console.log("Woo hoo! No files with conflicts!")
+	}
 }))
 
 findConflicts.stderr.on('data', (data) => console.log("failed ", data.toString('utf8')))
-findConflicts.on('exit', (data) => console.log("exited", data))
 
+function removeExtraneousData(data) {
+	let currentFileName = currentFileNamePath.split('/').pop()
+	return data.filter((d => !d.includes(currentFileName) && !d.includes(nodeMods) && d.length > 1))
+}
 
 function getFilesWithConflicts(data) {
-	var arr = []
-	data = data.split("\n").filter(f => !f.includes("./app.js") && f.length > 1)
-	data.forEach(d => console.log(`${CONFLICTED_FILE_MESSAGE} ${d}`))
+	let arr = []
+	data = data.map(d => `${d}`)
+	let obj = {}
+	obj['conflicted_files'] = data
+	console.log(render(obj), "\n Would you like to fix them?")
 }
