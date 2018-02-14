@@ -10,8 +10,9 @@ let nodeMods = "node_modules"
 findConflicts.stdout.on('data', ((data) => {
 	let res = data.toString('utf8')
 	let stdOutAsArr = res.split('\n')
-	if(removeExtraneousData(stdOutAsArr).length) {
-		getFilesWithConflicts(stdOutAsArr)
+	let conflictedFiles = removeExtraneousData(stdOutAsArr)
+	if(conflictedFiles.length) {
+		getFilesWithConflicts(conflictedFiles)
 	}
 	else {
 		console.log("Woo hoo! No files with conflicts!")
